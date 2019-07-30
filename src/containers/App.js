@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import Signin from '../components/Signin/Signin';
+import Register from '../components/Register/Register';
 import Navigation from '../components/Navigation/Navigation';
 import Logo from '../components/Logo/Logo';
 import ImageLinkForm from '../components/ImageLinkForm/ImageLinkForm';
@@ -18,7 +20,9 @@ class App extends Component {
 		this.state = {
 			input: '',
 			imageUrl: '',
-			box: {}
+			box: {},
+			route: 'signin',
+			isSignedIn: false
 		}
 	}
 
@@ -41,12 +45,12 @@ class App extends Component {
 	}
 
 	displayFaceBoxes = (box) => {
-		console.log(box);
+		//console.log(box);
 		this.setState({box: box});
 	}
 
 	onButtonSubmit = (event) => {
-		console.log("click");
+		//console.log("click");
 		this.setState({imageUrl: this.state.input});
 
 		app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
@@ -56,16 +60,43 @@ class App extends Component {
 			}); 
 	}
 
-	render(){
-		return (
-			<div className="App">
-				<Navigation />
-				<Logo />
-				<Rank />
-				<ImageLinkForm onInputChange = {this.onInputChange} onButtonSubmit = {this.onButtonSubmit} />
-				<FaceRecognition imageUrl={this.state.imageUrl} box={this.state.box} />
-			</div>
-		  );
+	onRouteChange = (route) => {
+		if(route === 'signout'){
+			this.setState({isSignedIn: false});
+		} else if(route === 'home'){
+			this.setState({isSignedIn: true});
+		}
+		this.setState({route: route});
+	}
+
+	render() {
+		const { isSignedIn, box, route, imageUrl} = this.state;
+		if(route === 'home'){
+			return (
+				<div className="App">
+					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
+					<Logo />
+					<Rank />
+					<ImageLinkForm onInputChange = {this.onInputChange} onButtonSubmit = {this.onButtonSubmit} />
+					<FaceRecognition imageUrl={imageUrl} box={box} />
+				</div>
+			  );
+		} else if (this.state.route === 'register'){
+			return (
+				<div className="App">
+					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
+					<Register onRouteChange = {this.onRouteChange} />
+				</div>
+			  );
+		} else {
+			return (
+				<div className="App">
+					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
+					<Signin onRouteChange = {this.onRouteChange} />
+				</div>
+			  );
+		}
+		
 	}
 }
 
