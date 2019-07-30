@@ -1,0 +1,27 @@
+.reco-container {
+	max-width: 80%;
+	width: 800px;
+	margin: 0 auto;
+	margin-top: 10px;
+	padding-bottom: 100px;
+}
+
+.img-container {
+	position: relative;
+	display: inline-block;
+	margin: auto;
+}
+
+.input-image {
+	max-width: 100%;
+	height: auto;
+}
+
+.bounding-box {
+    position: absolute;
+    box-shadow: 0 0 0 3px #149df2 inset;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    cursor: pointer;
+}
