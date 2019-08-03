@@ -22,16 +22,29 @@ class App extends Component {
 			imageUrl: '',
 			box: {},
 			route: 'signin',
-			isSignedIn: false
+			isSignedIn: false,
+			user: {
+				id: '',
+				name: '',
+				email: '',
+				entries: 0,
+				joined: ''
+			}
 		}
 	}
 
+	/* componentDidMount() {
+		fetch('http://localhost:3000')
+			.then(response => response)
+			.then(console.log);
+	}
+ */
 	onInputChange = (event) => {
 		this.setState({input: event.target.value});
 	}
 
 	calculateFaceLocation = (regions) => {
-		console.log(regions[0]);
+		// console.log(regions[0]);
 		const faceBox = regions[0].region_info.bounding_box;
 		const inputImage = document.getElementById("input-image");
 		const width = Number(inputImage.width);
@@ -49,35 +62,86 @@ class App extends Component {
 		this.setState({box: box});
 	}
 
-	onButtonSubmit = (event) => {
+	onPictureSubmit = (event) => {
 		//console.log("click");
-		this.setState({imageUrl: this.state.input});
-
-		app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
-			.then((response) => this.displayFaceBoxes(this.calculateFaceLocation(response.outputs[0].data.regions)))
+		fetch(this.state.input)
+			.then(response => {
+				let contentType = response.headers.get('Content-Type');
+				if(contentType.includes('image')){
+					this.setState({imageUrl: this.state.input});
+				} else {
+					throw Error("invalid url");
+				}
+			})
+			.then(() => {
+				return app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+			})
+			.then((response) => {
+				if(response){
+					fetch("http://localhost:3000/image", {
+						method: 'PUT',
+						mode: 'cors',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							id: this.state.user.id
+						})
+					})
+						.then(response => response.json())
+						.then(count => {
+							this.setState(Object.assign(this.state.user, {
+								entries: count
+							}));
+						})
+					this.displayFaceBoxes(this.calculateFaceLocation(response.outputs[0].data.regions));
+				}
+			})
 			.catch((err) => {
 				console.log("Something went wrong", err);
 			}); 
-	}
+		}
 
 	onRouteChange = (route) => {
 		if(route === 'signout'){
-			this.setState({isSignedIn: false});
+			this.setState({
+				isSignedIn: false,
+				input: '',
+				box: {},
+				imageUrl: '',
+				user: {
+					id: '',
+					name: '',
+					email: '',
+					entries: 0,
+					joined: ''
+				}
+			});
 		} else if(route === 'home'){
 			this.setState({isSignedIn: true});
 		}
 		this.setState({route: route});
 	}
 
+	loadUser = (newUser) => {
+		return this.setState({user: {
+			id: newUser.id,
+			name: newUser.name,
+			email: newUser.email,
+			entries: newUser.entries,
+			joined: newUser.joined
+		}})
+	};
+
 	render() {
-		const { isSignedIn, box, route, imageUrl} = this.state;
+		const { isSignedIn, box, route, imageUrl, user} = this.state;
 		if(route === 'home'){
 			return (
 				<div className="App">
 					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
 					<Logo />
-					<Rank />
-					<ImageLinkForm onInputChange = {this.onInputChange} onButtonSubmit = {this.onButtonSubmit} />
+					<Rank user = { user }/>
+					<ImageLinkForm onInputChange = {this.onInputChange} onPictureSubmit = {this.onPictureSubmit} />
 					<FaceRecognition imageUrl={imageUrl} box={box} />
 				</div>
 			  );
@@ -85,14 +149,14 @@ class App extends Component {
 			return (
 				<div className="App">
 					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
-					<Register onRouteChange = {this.onRouteChange} />
+					<Register onRouteChange = {this.onRouteChange} loadUser = {this.loadUser} />
 				</div>
 			  );
 		} else {
 			return (
 				<div className="App">
 					<Navigation onRouteChange = {this.onRouteChange} isSignedIn = {isSignedIn}/>
-					<Signin onRouteChange = {this.onRouteChange} />
+					<Signin onRouteChange = {this.onRouteChange} loadUser = {this.loadUser} />
 				</div>
 			  );
 		}
