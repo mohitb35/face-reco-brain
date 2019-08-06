@@ -19,29 +19,34 @@ class Signin extends Component {
 	}
 
 	onSubmitSignin = (event) => {
-		fetch("http://localhost:3000/signin", {
-			method: 'POST',
-			mode: 'cors',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				email: this.state.signInEmail,
-				password: this.state.signInPassword
+		const { signInEmail, signInPassword } = this.state;
+		if(!signInEmail || !signInPassword){
+			alert("Please fill in credentials");
+		} else {
+			fetch("http://localhost:3000/signin", {
+				method: 'POST',
+				mode: 'cors',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					email: signInEmail,
+					password: signInPassword
+				})
 			})
-		})
-			.then(response => response.json())
-			.then(user => {
-				if(user.id){
-					this.props.loadUser(user);
-					this.props.onRouteChange('home');
-				} else {
-					throw Error(user);
-				}
-			})
-			.catch(err => {
-				console.log(err);
-			});
+				.then(response => response.json())
+				.then(user => {
+					if(user.id){
+						this.props.loadUser(user);
+						this.props.onRouteChange('home');
+					} else {
+						throw Error(user);
+					}
+				})
+				.catch(err => {
+					alert(err);
+				});
+			}
 	};
 
 	render(){
