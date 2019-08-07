@@ -13,24 +13,27 @@ const app = new Clarifai.App({
 	apiKey: '1ffe59eb0c104fae9d3b9d98e9ed0927'
    });
 
+const initialState = {
+	input: '',
+	imageUrl: '',
+	box: {},
+	route: 'signin',
+	isSignedIn: false,
+	user: {
+		id: '',
+		name: '',
+		email: '',
+		entries: 0,
+		joined: ''
+	}
+};
+
 
 class App extends Component {
 	constructor() {
 		super();
-		this.state = {
-			input: '',
-			imageUrl: '',
-			box: {},
-			route: 'signin',
-			isSignedIn: false,
-			user: {
-				id: '',
-				name: '',
-				email: '',
-				entries: 0,
-				joined: ''
-			}
-		}
+		// this.state = JSON.parse(JSON.stringify(initialState));
+		this.state = initialState;
 	}
 
 	/* componentDidMount() {
@@ -40,6 +43,7 @@ class App extends Component {
 	}
  */
 	onInputChange = (event) => {
+		console.log("onInputChange");
 		this.setState({input: event.target.value});
 	}
 
@@ -59,6 +63,7 @@ class App extends Component {
 
 	displayFaceBoxes = (box) => {
 		//console.log(box);
+		console.log("displayFaceBoxes");
 		this.setState({box: box});
 	}
 
@@ -68,6 +73,7 @@ class App extends Component {
 			.then(response => {
 				let contentType = response.headers.get('Content-Type');
 				if(contentType.includes('image')){
+					console.log("onPictureSubmit1");
 					this.setState({imageUrl: this.state.input});
 				} else {
 					throw Error("invalid url");
@@ -90,9 +96,8 @@ class App extends Component {
 					})
 						.then(response => response.json())
 						.then(count => {
-							this.setState(Object.assign(this.state.user, {
-								entries: count
-							}));
+							console.log("onPictureSubmit2");
+							this.setState({user: Object.assign(this.state.user, { entries: count })});
 						})
 					this.displayFaceBoxes(this.calculateFaceLocation(response.outputs[0].data.regions));
 				}
@@ -104,7 +109,7 @@ class App extends Component {
 
 	onRouteChange = (route) => {
 		if(route === 'signout'){
-			this.setState({
+			/* this.setState({
 				isSignedIn: false,
 				input: '',
 				box: {},
@@ -116,10 +121,14 @@ class App extends Component {
 					entries: 0,
 					joined: ''
 				}
-			});
+			}); */
+			console.log("onRouteChange");
+			this.setState(initialState);
 		} else if(route === 'home'){
+			console.log("onRouteChange1");
 			this.setState({isSignedIn: true});
 		}
+		console.log("onRouteChange2");
 		this.setState({route: route});
 	}
 
@@ -135,6 +144,7 @@ class App extends Component {
 
 	render() {
 		const { isSignedIn, box, route, imageUrl, user} = this.state;
+		console.log("Render:Initial State", initialState);
 		if(route === 'home'){
 			return (
 				<div className="App">
